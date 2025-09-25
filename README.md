@@ -25,3 +25,7 @@ used regularization term *L2 penalty*
 \]
 it gives more **balanced weights**, basically prevents overfitting, which is what we need for the better model;)
 
+```cpp
+double cost = -(y.array() * a_clipped.array().log() +
+    (1 - y.array()) * (1 - a_clipped.array()).log()).sum() / m;
+cost += (lambda / (2.0 * m)) * w.array().square().sum();
