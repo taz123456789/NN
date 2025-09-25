@@ -8,7 +8,7 @@ After which we are findind sigmoid (the activator) it will give a probability of
 which is
 
 
-```**1/1+exp(-z)**
+**1/1+exp(-z)**
 
 Now we need prediction (X,w,b)
 
