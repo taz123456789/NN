@@ -29,6 +29,6 @@ then summing across all samples and finding avarage by /m
 
 used regularization term *L2 penalty*
 
-                                     J(w,b) = \text{loss} + \frac{\lambda}{2m} \sum_j w_j^2
-
 it gives more **balanced weights**, basically prevents overfitting, which is what we need for the better model;)
+
+
