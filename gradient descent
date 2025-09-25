@@ -1,0 +1,99 @@
+#include <iostream>
+#include <Eigen/Dense>
+#include<fstream>
+#include<sstream>
+#include <vector>
+#include<cmath>
+#include<string>
+using namespace std;
+using namespace Eigen;
+pair<MatrixXd, VectorXd> CSV(const string& name) {
+    ifstream infile(name);
+    if (!infile.is_open()) {
+        throw runtime_error("Cannot open file: " + name);
+    }
+    string line;
+    vector<vector<double>> data;
+    while (getline(infile, line)) {
+        stringstream each(line);
+        string info;
+        vector<double> row;
+        while (getline(each, info, ',')) {
+            row.push_back(stod(info));
+        }
+        data.push_back(row);
+    }
+    int m = data.size();
+    int n = data[0].size() - 1;
+    MatrixXd X(m, n);
+    VectorXd y(m);
+
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            X(i, j) = data[i][j];
+        }
+        y(i) = data[i][n];
+    }
+    return { X,y };
+}
+
+MatrixXd sigmoid(MatrixXd z) {
+    return 1.0/(1.0+(-z.array()).exp());
+}
+
+tuple<VectorXd, double, double> Propagate(const MatrixXd& X, const VectorXd& w, double b, const VectorXd& y, double lambda) {
+    int m = y.rows();
+    VectorXd z = X * w + VectorXd::Ones(m) * b;
+    VectorXd a = sigmoid(z);
+
+    // avoid log(0)
+    double epsilon = 1e-15;
+    VectorXd a_clipped = a.array().min(1 - epsilon).max(epsilon);
+    double cost = -(y.array() * a_clipped.array().log() +
+        (1 - y.array()) * (1 - a_clipped.array()).log()).sum() / m;
+    cost += (lambda / (2.0 * m)) * w.array().square().sum();
+    VectorXd dw = (X.transpose() * (a - y)) / m + (lambda / m) * w;
+    double db = (a - y).mean();
+
+    return { dw, db, cost };
+}
+
+
+VectorXd Z(const MatrixXd& X, const VectorXd& w, double b) {
+    int m = X.rows();
+    VectorXd z = X * w + VectorXd::Ones(m) * b;
+    VectorXd a = sigmoid(z);
+    VectorXd y_pred(m);
+    for (int i = 0; i < m; i++) {
+        y_pred(i) = (a(i) >= 0.5) ? 1.0 : 0.0;
+    }
+    return y_pred;
+}
+
+
+int main() {
+   auto [X, y] = CSV("C:\\Users\\user\\Downloads\\iris_binary.csv");
+    
+    int m = X.rows();
+    int n = X.cols();
+   
+    VectorXd w = VectorXd::Zero(n);
+    double b = 0.0;
+    double lambda = 0.0;
+    double learningrate = 0.1;
+    int iterations = 10000;
+   
+    for (int iter = 0; iter < iterations; iter++) {
+        auto [dw, db, cost] = Propagate(X, w, b, y, lambda);
+
+        w -= learningrate * dw;
+        b -= learningrate * db;
+
+        if (iter % 100 == 0) {
+            cout << "iteration " << iter << " cost: " << cost << endl;
+        }
+    }
+
+   return 0;
+}
+
